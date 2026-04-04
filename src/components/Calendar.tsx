@@ -30,7 +30,7 @@ const Calendar = () => {
       events: [
         { date: "2", title: "Good Friday Service", type: "Mass" },
         { date: "4", title: "Easter Sunday", type: "Mass" },
-        { date: "20", title: "Confirmation Classes Begin", type: "Education" }
+        { date: "7", title: "Music Competitions", type: "Music" }
       ]
     },
     {
@@ -44,7 +44,7 @@ const Calendar = () => {
     {
       month: "June",
       events: [
-        { date: "3", title: "Corpus Christi Procession", type: "Mass" },
+        { date: "3", title: "Martyr's Day", type: "Mass" },
         { date: "16", title: "Father's Day Service", type: "Mass" },
         { date: "29", title: "Feast of Saints Peter and Paul", type: "Mass" }
       ]
