@@ -11,12 +11,12 @@ const Contact = () => {
     {
       icon: Phone,
       title: "Phone",
-      details: ["+256 7663 7800", "Office Hours: Mon-Fri #Demonstration app.Thankyou."]
+      details: ["+256 766 637 800", "Office Hours: Mon-Fri #HAPPY EASTER TO EVERYONE."]
     },
     {
       icon: Mail,
       title: "Email",
-      details: ["info@bunyorokitaradiocese.org", "bishop@bunyorokitaradiocese.org"]
+      details: ["....................", "................."]
     },
     {
       icon: Clock,
