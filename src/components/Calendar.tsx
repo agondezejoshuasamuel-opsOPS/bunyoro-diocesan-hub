@@ -126,7 +126,7 @@ const Calendar = () => {
             </div>
           </div>
           <h2 className="text-4xl md:text-5xl font-bold mb-4 text-foreground">
-            2025 Activities Calendar
+            2026 Activities Calendar
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Join us throughout the year for worship, learning, and community service
