@@ -11,7 +11,7 @@ const Contact = () => {
     {
       icon: Phone,
       title: "Phone",
-      details: ["+256 766 637 800", "Office Hours: Mon-Fri #HAPPY EASTER TO EVERYONE."]
+      details: ["+256 XXX XXX XXX", "Office Hours: Mon-Fri"]
     },
     {
       icon: Mail,
