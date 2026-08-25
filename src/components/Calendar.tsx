@@ -1,11 +1,15 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CalendarDays } from "lucide-react";
+import { CalendarDays, RefreshCw } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 
 type EventItem = { date: string; title: string; type: string };
 type MonthEvents = { month: string; events: EventItem[] };
+
 
 const calendars: Record<string, MonthEvents[]> = {
   "2025": [
@@ -174,10 +178,77 @@ const calendars: Record<string, MonthEvents[]> = {
 };
 
 const YEARS = Object.keys(calendars);
+const MONTH_ORDER = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
+
+type LiveRow = { year: number; month: string; day: string; title: string; category: string; refreshed_at: string };
+
+const groupByMonth = (rows: LiveRow[]): MonthEvents[] => {
+  const byMonth = new Map<string, EventItem[]>();
+  rows.forEach((row) => {
+    const list = byMonth.get(row.month) ?? [];
+    list.push({ date: row.day, title: row.title, type: row.category });
+    byMonth.set(row.month, list);
+  });
+  return MONTH_ORDER.filter((m) => byMonth.has(m)).map((m) => ({
+    month: m,
+    events: (byMonth.get(m) ?? []).sort((a, b) => Number(a.date) - Number(b.date)),
+  }));
+};
 
 const Calendar = () => {
   const [year, setYear] = useState<string>("2026");
-  const events = calendars[year];
+  const [liveEvents, setLiveEvents] = useState<Record<string, MonthEvents[]>>({});
+  const [lastUpdated, setLastUpdated] = useState<Record<string, string>>({});
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const loadLive = useCallback(async (targetYear: string) => {
+    const { data, error } = await supabase
+      .from("diocese_events")
+      .select("year, month, day, title, category, refreshed_at")
+      .eq("year", Number(targetYear));
+
+    if (error || !data || data.length === 0) return;
+    setLiveEvents((prev) => ({ ...prev, [targetYear]: groupByMonth(data as LiveRow[]) }));
+    setLastUpdated((prev) => ({ ...prev, [targetYear]: (data[0] as LiveRow).refreshed_at }));
+  }, []);
+
+  useEffect(() => {
+    loadLive(year);
+  }, [year, loadLive]);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("refresh-activities", {
+        body: { year: Number(year) },
+      });
+      if (error) throw error;
+
+      if (data?.updated > 0) {
+        await loadLive(year);
+        toast({ title: "Calendar updated", description: `${data.updated} activities loaded from bkdiocese.org.` });
+      } else {
+        toast({
+          title: "Nothing new found",
+          description: data?.message ?? `No ${year} activities were published on bkdiocese.org.`,
+        });
+      }
+    } catch (err) {
+      console.error("refresh-activities failed:", err);
+      toast({
+        title: "Refresh failed",
+        description: "Could not reach bkdiocese.org right now. Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  const events = liveEvents[year] ?? calendars[year];
 
   const getEventColor = (type: string) => {
     const colors: Record<string, string> = {
@@ -213,7 +284,7 @@ const Calendar = () => {
           <div className="w-24 h-1 bg-accent mx-auto rounded-full mt-4" />
         </div>
 
-        <div className="flex justify-center mb-10">
+        <div className="flex flex-col items-center gap-4 mb-10">
           <Tabs value={year} onValueChange={setYear}>
             <TabsList>
               {YEARS.map((y) => (
@@ -223,7 +294,19 @@ const Calendar = () => {
               ))}
             </TabsList>
           </Tabs>
+
+          <Button variant="outline" onClick={handleRefresh} disabled={isRefreshing} className="gap-2">
+            <RefreshCw className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`} />
+            {isRefreshing ? "Refreshing…" : "Refresh from bkdiocese.org"}
+          </Button>
+
+          <p className="text-sm text-muted-foreground">
+            {lastUpdated[year]
+              ? `Last updated ${new Date(lastUpdated[year]).toLocaleString()}`
+              : "Showing the standard diocesan schedule"}
+          </p>
         </div>
+
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {events.map((monthData, index) => (
