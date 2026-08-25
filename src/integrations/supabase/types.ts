@@ -14,7 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      diocese_events: {
+        Row: {
+          category: string
+          created_at: string
+          day: string
+          id: string
+          month: string
+          refreshed_at: string
+          source_url: string | null
+          title: string
+          year: number
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          day: string
+          id?: string
+          month: string
+          refreshed_at?: string
+          source_url?: string | null
+          title: string
+          year: number
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          day?: string
+          id?: string
+          month?: string
+          refreshed_at?: string
+          source_url?: string | null
+          title?: string
+          year?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
